@@ -557,16 +557,19 @@ export default {
     },
     
     onCellMouseEnter(table, rowIndex, colIndex) {
+      console.log('Cell hover:', table.id, rowIndex, colIndex, 'selected:', this.selectedTableId)
       if (this.selectedTableId === table.id) {
         this.hoveredCell = {
           tableId: table.id,
           rowIndex,
           colIndex
         }
+        console.log('hoveredCell set:', this.hoveredCell)
       }
     },
     
     onCellMouseLeave() {
+      console.log('Cell leave')
       this.hoveredCell = null
     },
     
