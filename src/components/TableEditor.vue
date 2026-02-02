@@ -333,7 +333,8 @@ export default {
         stroke: '#0d99ff',
         strokeWidth: 2,
         fill: 'transparent',
-        cornerRadius: 4
+        cornerRadius: 4,
+        listening: false // Don't block mouse events
       }
     },
     
