@@ -84,6 +84,8 @@
               <v-text :config="getRowAddTextConfig(table)" />
             </v-group>
             
+            <!-- Cell hover indicators -->
+            <template v-if="hoveredCell && hoveredCell.tableId === table.id">
               <!-- Top indicator (column) -->
               <v-group :config="{ x: hoveredCell.colIndex * table.cellWidth, y: -18 }">
                 <v-rect :config="getColumnIndicatorBgConfig(table)" />
