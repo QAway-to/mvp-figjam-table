@@ -43,6 +43,8 @@
               <v-rect :config="getCellConfig(table, rowIndex, colIndex)" 
                 @click="onCellClick($event, table, rowIndex, colIndex)"
                 @dblclick="onCellDoubleClick($event, table, rowIndex, colIndex)"
+                @mouseenter="onCellMouseEnter(table, rowIndex, colIndex)"
+                @mouseleave="onCellMouseLeave"
               />
               <!-- Cell text -->
               <v-text :config="getCellTextConfig(table, cell, rowIndex, colIndex)" />
@@ -91,6 +93,27 @@
               <v-rect :config="getRowAddBgConfig(table)" />
               <v-text :config="getRowAddTextConfig(table)" />
             </v-group>
+            
+            <!-- Cell hover indicators -->
+            <template v-if="hoveredCell && hoveredCell.tableId === table.id">
+              <!-- Top indicator (column) -->
+              <v-group :config="{ x: hoveredCell.colIndex * table.cellWidth, y: -18 }">
+                <v-rect :config="getColumnIndicatorBgConfig(table)" />
+                <!-- Left ball -->
+                <v-circle :config="getIndicatorBallConfig(0, 6)" />
+                <!-- Right ball (if not first column) -->
+                <v-circle v-if="hoveredCell.colIndex > 0 || hoveredCell.colIndex < table.cols - 1" :config="getIndicatorBallConfig(table.cellWidth, 6)" />
+              </v-group>
+              
+              <!-- Left indicator (row) -->
+              <v-group :config="{ x: -18, y: hoveredCell.rowIndex * table.cellHeight }">
+                <v-rect :config="getRowIndicatorBgConfig(table)" />
+                <!-- Top ball -->
+                <v-circle :config="getIndicatorBallConfig(6, 0)" />
+                <!-- Bottom ball (if not first row) -->
+                <v-circle v-if="hoveredCell.rowIndex > 0 || hoveredCell.rowIndex < table.rows - 1" :config="getIndicatorBallConfig(6, table.cellHeight)" />
+              </v-group>
+            </template>
           </template>
         </v-group>
         
@@ -142,6 +165,7 @@ export default {
       isHoveringTable: false,
       isHoveringColumnAdd: false,
       isHoveringRowAdd: false,
+      hoveredCell: null, // { tableId, rowIndex, colIndex }
       editingCell: null,
       editingCellText: '',
       isCreatingTable: false,
@@ -402,6 +426,38 @@ export default {
       }
     },
     
+    // Cell hover indicator configs
+    getColumnIndicatorBgConfig(table) {
+      return {
+        x: 0,
+        y: 0,
+        width: table.cellWidth,
+        height: 12,
+        fill: '#d0e7ff',
+        cornerRadius: 6
+      }
+    },
+    
+    getRowIndicatorBgConfig(table) {
+      return {
+        x: 0,
+        y: 0,
+        width: 12,
+        height: table.cellHeight,
+        fill: '#d0e7ff',
+        cornerRadius: 6
+      }
+    },
+    
+    getIndicatorBallConfig(x, y) {
+      return {
+        x: x,
+        y: y,
+        radius: 3,
+        fill: '#0d99ff'
+      }
+    },
+    
     getColumnEdgeHighlightConfig(table) {
       const width = table.cols * table.cellWidth
       const height = table.rows * table.cellHeight
@@ -507,6 +563,20 @@ export default {
     
     onTableClick(table) {
       this.$emit('table-selected', table.id)
+    },
+    
+    onCellMouseEnter(table, rowIndex, colIndex) {
+      if (this.selectedTableId === table.id) {
+        this.hoveredCell = {
+          tableId: table.id,
+          rowIndex,
+          colIndex
+        }
+      }
+    },
+    
+    onCellMouseLeave() {
+      this.hoveredCell = null
     },
     
     onTableDragEnd(e, table) {
