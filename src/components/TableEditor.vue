@@ -88,29 +88,23 @@
             <template v-if="hoveredCell && hoveredCell.tableId === table.id">
               <!-- Top indicator (column) -->
               <v-group :config="{ x: hoveredCell.colIndex * table.cellWidth, y: -18 }">
-                <v-rect :config="getColumnIndicatorBgConfig(table)" />
+                <!-- Left ball -->
                 <v-circle :config="getIndicatorBallConfig(0, 6)" />
-                <v-circle v-if="hoveredCell.colIndex > 0 || hoveredCell.colIndex < table.cols - 1" :config="getIndicatorBallConfig(table.cellWidth, 6)" />
+                <!-- Center dash -->
+                <v-rect :config="getIndicatorDashConfig(table.cellWidth, 'horizontal')" />
+                <!-- Right ball -->
+                <v-circle :config="getIndicatorBallConfig(table.cellWidth, 6)" />
               </v-group>
               
               <!-- Left indicator (row) -->
               <v-group :config="{ x: -18, y: hoveredCell.rowIndex * table.cellHeight }">
-                <v-rect :config="getRowIndicatorBgConfig(table)" />
+                <!-- Top ball -->
                 <v-circle :config="getIndicatorBallConfig(6, 0)" />
-                <v-circle v-if="hoveredCell.rowIndex > 0 || hoveredCell.rowIndex < table.rows - 1" :config="getIndicatorBallConfig(6, table.cellHeight)" />
+                <!-- Center dash -->
+                <v-rect :config="getIndicatorDashConfig(table.cellHeight, 'vertical')" />
+                <!-- Bottom ball -->
+                <v-circle :config="getIndicatorBallConfig(6, table.cellHeight)" />
               </v-group>
-              
-              <!-- Balls on cell corners (grid intersections) -->
-              <template v-if="!isCornerCell(table, hoveredCell.rowIndex, hoveredCell.colIndex)">
-                <!-- Top-Left -->
-                <v-circle :config="getGridBallConfig(hoveredCell.colIndex * table.cellWidth, hoveredCell.rowIndex * table.cellHeight)" />
-                <!-- Top-Right -->
-                <v-circle :config="getGridBallConfig((hoveredCell.colIndex + 1) * table.cellWidth, hoveredCell.rowIndex * table.cellHeight)" />
-                <!-- Bottom-Left -->
-                <v-circle :config="getGridBallConfig(hoveredCell.colIndex * table.cellWidth, (hoveredCell.rowIndex + 1) * table.cellHeight)" />
-                <!-- Bottom-Right -->
-                <v-circle :config="getGridBallConfig((hoveredCell.colIndex + 1) * table.cellWidth, (hoveredCell.rowIndex + 1) * table.cellHeight)" />
-              </template>
             </template>
           </template>
         </v-group>
@@ -427,27 +421,7 @@ export default {
     },
     
     // Cell hover indicator configs
-    getColumnIndicatorBgConfig(table) {
-      return {
-        x: 0,
-        y: 0,
-        width: table.cellWidth,
-        height: 12,
-        fill: '#d0e7ff',
-        cornerRadius: 6
-      }
-    },
-    
-    getRowIndicatorBgConfig(table) {
-      return {
-        x: 0,
-        y: 0,
-        width: 12,
-        height: table.cellHeight,
-        fill: '#d0e7ff',
-        cornerRadius: 6
-      }
-    },
+    // getColumnIndicatorBgConfig and getRowIndicatorBgConfig removed as we use dashes now
     
     getIndicatorBallConfig(x, y) {
       return {
@@ -586,22 +560,38 @@ export default {
       }
     },
 
-    isCornerCell(table, row, col) {
-      const isTopLeft = row === 0 && col === 0
-      const isTopRight = row === 0 && col === table.cols - 1
-      const isBottomLeft = row === table.rows - 1 && col === 0
-      const isBottomRight = row === table.rows - 1 && col === table.cols - 1
-      return isTopLeft || isTopRight || isBottomLeft || isBottomRight
+    getIndicatorDashConfig(length, orientation) {
+      const dashLength = 12
+      const dashThickness = 4
+      const axis = 6 // offset of centers provided by balls position logic
+      
+      if (orientation === 'horizontal') {
+        return {
+          x: length / 2 - dashLength / 2,
+          y: axis - dashThickness / 2,
+          width: dashLength,
+          height: dashThickness,
+          fill: '#0d99ff',
+          cornerRadius: 2
+        }
+      } else {
+        return {
+          x: axis - dashThickness / 2,
+          y: length / 2 - dashLength / 2,
+          width: dashThickness,
+          height: dashLength,
+          fill: '#0d99ff',
+          cornerRadius: 2
+        }
+      }
     },
 
-    getGridBallConfig(x, y) {
+    getIndicatorBallConfig(x, y) {
       return {
         x: x,
         y: y,
-        radius: 4,
-        fill: '#0d99ff',
-        stroke: 'white',
-        strokeWidth: 2
+        radius: 3,
+        fill: '#0d99ff'
       }
     },
     
