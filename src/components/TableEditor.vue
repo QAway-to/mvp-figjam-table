@@ -53,13 +53,6 @@
           
           <!-- Selection UI (when selected) -->
           <template v-if="selectedTableId === table.id">
-            <!-- Invisible extended hover zone -->
-            <v-rect 
-              :config="getExtendedHoverZoneConfig(table)"
-              @mouseenter="isHoveringTable = true"
-              @mouseleave="onHoverZoneLeave"
-            />
-            
             <!-- Selection border -->
             <v-rect :config="getSelectionBorderConfig(table)" />
             
@@ -70,9 +63,8 @@
               :config="handle"
             />
             
-            <!-- Column add button (shows on extended hover) -->
+            <!-- Column add button -->
             <v-group 
-              v-if="isHoveringTable || isHoveringColumnAdd"
               :config="getColumnAddButtonConfig(table)" 
               @click="addColumn(table)"
               @mouseenter="isHoveringColumnAdd = true"
@@ -82,9 +74,8 @@
               <v-text :config="columnAddTextConfig" />
             </v-group>
             
-            <!-- Row add button (shows on extended hover) -->
+            <!-- Row add button -->
             <v-group 
-              v-if="isHoveringTable || isHoveringRowAdd"
               :config="getRowAddButtonConfig(table)" 
               @click="addRow(table)"
               @mouseenter="isHoveringRowAdd = true"
