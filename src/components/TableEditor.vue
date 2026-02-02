@@ -27,6 +27,8 @@
           :config="getTableGroupConfig(table)"
           @dragend="onTableDragEnd($event, table)"
           @click="onTableClick(table)"
+          @mouseenter="onTableMouseEnter(table)"
+          @mouseleave="onTableMouseLeave()"
         >
           <!-- Table background -->
           <v-rect :config="getTableBackgroundConfig(table)" />
@@ -59,20 +61,9 @@
               :config="handle"
             />
             
-            <!-- Column highlight (when hovering add column button) -->
-            <v-rect 
-              v-if="isHoveringColumnAdd"
-              :config="getColumnEdgeHighlightConfig(table)"
-            />
-            
-            <!-- Row highlight (when hovering add row button) -->
-            <v-rect 
-              v-if="isHoveringRowAdd"
-              :config="getRowEdgeHighlightConfig(table)"
-            />
-            
-            <!-- Column add button -->
+            <!-- Column add button (shows on table hover) -->
             <v-group 
+              v-if="isHoveringTable || isHoveringColumnAdd"
               :config="getColumnAddButtonConfig(table)" 
               @click="addColumn(table)"
               @mouseenter="isHoveringColumnAdd = true"
@@ -82,8 +73,9 @@
               <v-text :config="columnAddTextConfig" />
             </v-group>
             
-            <!-- Row add button -->
+            <!-- Row add button (shows on table hover) -->
             <v-group 
+              v-if="isHoveringTable || isHoveringRowAdd"
               :config="getRowAddButtonConfig(table)" 
               @click="addRow(table)"
               @mouseenter="isHoveringRowAdd = true"
@@ -92,12 +84,6 @@
               <v-rect :config="getRowAddBgConfig(table)" />
               <v-text :config="getRowAddTextConfig(table)" />
             </v-group>
-            
-            <!-- Column highlight (when hovering) -->
-            <v-rect 
-              v-if="hoveredColumn !== null"
-              :config="getColumnHighlightConfig(table, hoveredColumn)"
-            />
           </template>
         </v-group>
         
@@ -146,6 +132,7 @@ export default {
       stageHeight: 600,
       hoveredColumn: null,
       hoveredRow: null,
+      isHoveringTable: false,
       isHoveringColumnAdd: false,
       isHoveringRowAdd: false,
       editingCell: null,
@@ -478,6 +465,18 @@ export default {
     onContextMenu(e) {
       e.evt.preventDefault()
       // Context menu logic here
+    },
+    
+    onTableMouseEnter(table) {
+      if (this.selectedTableId === table.id) {
+        this.isHoveringTable = true
+      }
+    },
+    
+    onTableMouseLeave() {
+      this.isHoveringTable = false
+      // Keep buttons visible if hovering directly on them
+      // isHoveringColumnAdd and isHoveringRowAdd will handle this
     },
     
     onTableClick(table) {
