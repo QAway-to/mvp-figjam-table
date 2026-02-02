@@ -51,6 +51,13 @@
           
           <!-- Selection UI (when selected) -->
           <template v-if="selectedTableId === table.id">
+            <!-- Invisible extended hover zone -->
+            <v-rect 
+              :config="getExtendedHoverZoneConfig(table)"
+              @mouseenter="isHoveringTable = true"
+              @mouseleave="onHoverZoneLeave"
+            />
+            
             <!-- Selection border -->
             <v-rect :config="getSelectionBorderConfig(table)" />
             
@@ -61,7 +68,7 @@
               :config="handle"
             />
             
-            <!-- Column add button (shows on table hover) -->
+            <!-- Column add button (shows on extended hover) -->
             <v-group 
               v-if="isHoveringTable || isHoveringColumnAdd"
               :config="getColumnAddButtonConfig(table)" 
@@ -73,7 +80,7 @@
               <v-text :config="columnAddTextConfig" />
             </v-group>
             
-            <!-- Row add button (shows on table hover) -->
+            <!-- Row add button (shows on extended hover) -->
             <v-group 
               v-if="isHoveringTable || isHoveringRowAdd"
               :config="getRowAddButtonConfig(table)" 
@@ -314,6 +321,20 @@ export default {
       }
     },
     
+    getExtendedHoverZoneConfig(table) {
+      const width = table.cols * table.cellWidth
+      const height = table.rows * table.cellHeight
+      const padding = 50 // Extend hover zone 50px beyond table
+      return {
+        x: -padding,
+        y: -padding,
+        width: width + padding * 2 + 40, // Extra space for column add button
+        height: height + padding * 2 + 40, // Extra space for row add button
+        fill: 'transparent',
+        listening: true
+      }
+    },
+    
     getCornerHandles(table) {
       const width = table.cols * table.cellWidth
       const height = table.rows * table.cellHeight
@@ -474,9 +495,14 @@ export default {
     },
     
     onTableMouseLeave() {
-      this.isHoveringTable = false
-      // Keep buttons visible if hovering directly on them
-      // isHoveringColumnAdd and isHoveringRowAdd will handle this
+      // Don't hide immediately - let hover zone handle it
+    },
+    
+    onHoverZoneLeave() {
+      // Only hide if not hovering on add buttons
+      if (!this.isHoveringColumnAdd && !this.isHoveringRowAdd) {
+        this.isHoveringTable = false
+      }
     },
     
     onTableClick(table) {
