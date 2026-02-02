@@ -317,7 +317,8 @@ export default {
         textDecoration: style.textDecoration || '',
         fill: style.fill || '#1e1e1e',
         align: style.align || 'left',
-        verticalAlign: 'middle'
+        verticalAlign: 'middle',
+        listening: false // Don't block mouse events on underlying cell
       }
     },
     
