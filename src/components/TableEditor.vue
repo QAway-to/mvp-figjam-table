@@ -28,7 +28,8 @@
           @dragend="onTableDragEnd($event, table)"
           @click="onTableClick(table)"
           @mouseenter="onTableMouseEnter(table)"
-          @mouseleave="onTableMouseLeave()"
+          @mouseleave="onTableMouseLeave(table)"
+          @mousemove="onTableMouseMove($event, table)"
         >
           <!-- Table background -->
           <v-rect :config="getTableBackgroundConfig(table)" />
@@ -43,8 +44,6 @@
               <v-rect :config="getCellConfig(table, rowIndex, colIndex)" 
                 @click="onCellClick($event, table, rowIndex, colIndex)"
                 @dblclick="onCellDoubleClick($event, table, rowIndex, colIndex)"
-                @mouseenter="onCellMouseEnter(table, rowIndex, colIndex)"
-                @mouseleave="onCellMouseLeave"
               />
               <!-- Cell text -->
               <v-text :config="getCellTextConfig(table, cell, rowIndex, colIndex)" />
@@ -85,25 +84,31 @@
               <v-text :config="getRowAddTextConfig(table)" />
             </v-group>
             
-            <!-- Cell hover indicators -->
-            <template v-if="hoveredCell && hoveredCell.tableId === table.id">
               <!-- Top indicator (column) -->
               <v-group :config="{ x: hoveredCell.colIndex * table.cellWidth, y: -18 }">
                 <v-rect :config="getColumnIndicatorBgConfig(table)" />
-                <!-- Left ball -->
                 <v-circle :config="getIndicatorBallConfig(0, 6)" />
-                <!-- Right ball (if not first column) -->
                 <v-circle v-if="hoveredCell.colIndex > 0 || hoveredCell.colIndex < table.cols - 1" :config="getIndicatorBallConfig(table.cellWidth, 6)" />
               </v-group>
               
               <!-- Left indicator (row) -->
               <v-group :config="{ x: -18, y: hoveredCell.rowIndex * table.cellHeight }">
                 <v-rect :config="getRowIndicatorBgConfig(table)" />
-                <!-- Top ball -->
                 <v-circle :config="getIndicatorBallConfig(6, 0)" />
-                <!-- Bottom ball (if not first row) -->
                 <v-circle v-if="hoveredCell.rowIndex > 0 || hoveredCell.rowIndex < table.rows - 1" :config="getIndicatorBallConfig(6, table.cellHeight)" />
               </v-group>
+              
+              <!-- Balls on cell corners (grid intersections) -->
+              <template v-if="!isCornerCell(table, hoveredCell.rowIndex, hoveredCell.colIndex)">
+                <!-- Top-Left -->
+                <v-circle :config="getGridBallConfig(hoveredCell.colIndex * table.cellWidth, hoveredCell.rowIndex * table.cellHeight)" />
+                <!-- Top-Right -->
+                <v-circle :config="getGridBallConfig((hoveredCell.colIndex + 1) * table.cellWidth, hoveredCell.rowIndex * table.cellHeight)" />
+                <!-- Bottom-Left -->
+                <v-circle :config="getGridBallConfig(hoveredCell.colIndex * table.cellWidth, (hoveredCell.rowIndex + 1) * table.cellHeight)" />
+                <!-- Bottom-Right -->
+                <v-circle :config="getGridBallConfig((hoveredCell.colIndex + 1) * table.cellWidth, (hoveredCell.rowIndex + 1) * table.cellHeight)" />
+              </template>
             </template>
           </template>
         </v-group>
@@ -543,14 +548,58 @@ export default {
       }
     },
     
-    onTableMouseLeave() {
-      // Don't hide immediately - let hover zone handle it
-    },
-    
-    onHoverZoneLeave() {
-      // Only hide if not hovering on add buttons
+    onTableMouseLeave(table) {
       if (!this.isHoveringColumnAdd && !this.isHoveringRowAdd) {
         this.isHoveringTable = false
+        this.hoveredCell = null
+      }
+    },
+    
+    onTableMouseMove(e, table) {
+      if (this.selectedTableId !== table.id) return
+
+      // Get pointer position relative to table group
+      // The event target might be a shape deep inside the group.
+      // We need position relative to the stage, then subtract table position.
+      const stage = e.target.getStage()
+      const pointer = stage.getPointerPosition()
+      
+      // Calculate relative position
+      const x = pointer.x - table.x
+      const y = pointer.y - table.y
+      
+      const col = Math.floor(x / table.cellWidth)
+      const row = Math.floor(y / table.cellHeight)
+      
+      if (col >= 0 && col < table.cols && row >= 0 && row < table.rows) {
+        this.hoveredCell = { tableId: table.id, rowIndex: row, colIndex: col }
+        this.isHoveringTable = true
+      } else {
+        // If outside table bounds (but inside group due to add buttons?), clear hoveredCell
+        if (!this.isHoveringColumnAdd && !this.isHoveringRowAdd) {
+           // Maybe don't clear immediately to avoid flickering?
+           // Actually, if we are in adding buttons, we are outside bounds.
+           this.hoveredCell = null
+        }
+      }
+    },
+
+    isCornerCell(table, row, col) {
+      const isTopLeft = row === 0 && col === 0
+      const isTopRight = row === 0 && col === table.cols - 1
+      const isBottomLeft = row === table.rows - 1 && col === 0
+      const isBottomRight = row === table.rows - 1 && col === table.cols - 1
+      return isTopLeft || isTopRight || isBottomLeft || isBottomRight
+    },
+
+    getGridBallConfig(x, y) {
+      return {
+        x: x,
+        y: y,
+        radius: 4,
+        fill: '#0d99ff',
+        stroke: 'white',
+        strokeWidth: 2
       }
     },
     
