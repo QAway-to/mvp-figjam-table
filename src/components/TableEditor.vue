@@ -59,16 +59,38 @@
               :config="handle"
             />
             
+            <!-- Column highlight (when hovering add column button) -->
+            <v-rect 
+              v-if="isHoveringColumnAdd"
+              :config="getColumnEdgeHighlightConfig(table)"
+            />
+            
+            <!-- Row highlight (when hovering add row button) -->
+            <v-rect 
+              v-if="isHoveringRowAdd"
+              :config="getRowEdgeHighlightConfig(table)"
+            />
+            
             <!-- Column add button -->
-            <v-group :config="getColumnAddButtonConfig(table)" @click="addColumn(table)">
-              <v-rect :config="columnAddBgConfig" />
+            <v-group 
+              :config="getColumnAddButtonConfig(table)" 
+              @click="addColumn(table)"
+              @mouseenter="isHoveringColumnAdd = true"
+              @mouseleave="isHoveringColumnAdd = false"
+            >
+              <v-rect :config="getColumnAddBgConfig()" />
               <v-text :config="columnAddTextConfig" />
             </v-group>
             
             <!-- Row add button -->
-            <v-group :config="getRowAddButtonConfig(table)" @click="addRow(table)">
-              <v-rect :config="rowAddBgConfig" />
-              <v-text :config="rowAddTextConfig" />
+            <v-group 
+              :config="getRowAddButtonConfig(table)" 
+              @click="addRow(table)"
+              @mouseenter="isHoveringRowAdd = true"
+              @mouseleave="isHoveringRowAdd = false"
+            >
+              <v-rect :config="getRowAddBgConfig(table)" />
+              <v-text :config="getRowAddTextConfig(table)" />
             </v-group>
             
             <!-- Column highlight (when hovering) -->
@@ -124,6 +146,8 @@ export default {
       stageHeight: 600,
       hoveredColumn: null,
       hoveredRow: null,
+      isHoveringColumnAdd: false,
+      isHoveringRowAdd: false,
       editingCell: null,
       editingCellText: '',
       isCreatingTable: false,
@@ -187,42 +211,17 @@ export default {
         fill: '#666'
       }
     },
-    columnAddBgConfig() {
-      return {
-        width: 24,
-        height: 80,
-        fill: '#e3f2fd',
-        cornerRadius: 4
-      }
-    },
     columnAddTextConfig() {
+      const table = this.tables.find(t => t.id === this.selectedTableId)
+      const height = table ? table.rows * table.cellHeight : 80
       return {
         text: '+',
         x: 0,
-        y: 28,
+        y: height / 2 - 10,
         width: 24,
         align: 'center',
         fontSize: 18,
-        fill: '#1976d2'
-      }
-    },
-    rowAddBgConfig() {
-      return {
-        width: 80,
-        height: 24,
-        fill: '#e3f2fd',
-        cornerRadius: 4
-      }
-    },
-    rowAddTextConfig() {
-      return {
-        text: '+',
-        x: 0,
-        y: 2,
-        width: 80,
-        align: 'center',
-        fontSize: 16,
-        fill: '#1976d2'
+        fill: this.isHoveringColumnAdd ? '#ffffff' : '#1976d2'
       }
     },
     cellInputStyle() {
@@ -347,7 +346,19 @@ export default {
       const height = table.rows * table.cellHeight
       return {
         x: width + 8,
-        y: height / 2 - 40
+        y: 0
+      }
+    },
+    
+    getColumnAddBgConfig() {
+      const table = this.tables.find(t => t.id === this.selectedTableId)
+      if (!table) return {}
+      const height = table.rows * table.cellHeight
+      return {
+        width: 24,
+        height: height,
+        fill: this.isHoveringColumnAdd ? '#0d99ff' : '#e3f2fd',
+        cornerRadius: 4
       }
     },
     
@@ -355,8 +366,57 @@ export default {
       const width = table.cols * table.cellWidth
       const height = table.rows * table.cellHeight
       return {
-        x: width / 2 - 40,
+        x: 0,
         y: height + 8
+      }
+    },
+    
+    getRowAddBgConfig(table) {
+      const width = table.cols * table.cellWidth
+      return {
+        width: width,
+        height: 24,
+        fill: this.isHoveringRowAdd ? '#0d99ff' : '#e3f2fd',
+        cornerRadius: 4
+      }
+    },
+    
+    getRowAddTextConfig(table) {
+      const width = table.cols * table.cellWidth
+      return {
+        text: '+',
+        x: 0,
+        y: 2,
+        width: width,
+        align: 'center',
+        fontSize: 16,
+        fill: this.isHoveringRowAdd ? '#ffffff' : '#1976d2'
+      }
+    },
+    
+    getColumnEdgeHighlightConfig(table) {
+      const width = table.cols * table.cellWidth
+      const height = table.rows * table.cellHeight
+      return {
+        x: width - 4,
+        y: 0,
+        width: 8,
+        height: height,
+        fill: '#0d99ff',
+        cornerRadius: 2
+      }
+    },
+    
+    getRowEdgeHighlightConfig(table) {
+      const width = table.cols * table.cellWidth
+      const height = table.rows * table.cellHeight
+      return {
+        x: 0,
+        y: height - 4,
+        width: width,
+        height: 8,
+        fill: '#0d99ff',
+        cornerRadius: 2
       }
     },
     
